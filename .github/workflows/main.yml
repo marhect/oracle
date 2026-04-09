@@ -1,0 +1,45 @@
+name: Caza Instancia TFG Dockerizado
+on:
+  workflow_dispatch:
+
+jobs:
+  atacar:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Preparar Archivos para el Contenedor
+        run: |
+          mkdir -p ~/.oci
+          echo "${{ secrets.OCI_KEY_FILE }}" > ~/.oci/oci_api_key.pem
+          chmod 600 ~/.oci/oci_api_key.pem
+          
+          # ¡OJO! La ruta key_file apunta a /oracle/.oci porque es la ruta DENTRO del contenedor
+          cat <<EOF > ~/.oci/config
+          [DEFAULT]
+          user=${{ secrets.OCI_USER }}
+          fingerprint=${{ secrets.OCI_FINGERPRINT }}
+          tenancy=${{ secrets.OCI_TENANCY }}
+          region=${{ secrets.OCI_REGION }}
+          key_file=/oracle/.oci/oci_api_key.pem
+          EOF
+
+          # Creamos la llave pública en la misma carpeta para enviarla al Docker
+          echo "PEGAR_AQUI_EL_TEXTO_DE_TU_CLAVE_PUBLICA" > ~/.oci/llave.pub
+
+      - name: Disparo Rapido a Madrid-3 (via Docker)
+        run: |
+          # Lanzamos la imagen oficial de Oracle montando nuestros archivos
+          docker run --rm \
+            -v ~/.oci:/oracle/.oci \
+            ghcr.io/oracle/oci-cli \
+            compute instance launch \
+              --availability-domain "nkqP:EU-MADRID-3-AD-1" \
+              --compartment-id "ocid1.tenancy.oc1..aaaaaaaa4qtzondqaj4en66pjsneao64l4wmaicuno34xt22ou5xw77uqxdq" \
+              --shape "VM.Standard.A1.Flex" \
+              --shape-config '{"ocpus":2,"memoryInGBs":12}' \
+              --subnet-id "ocid1.subnet.oc1.eu-madrid-3.aaaaaaaagzuzogjtt6wmo63lbkqs7jtbn2ua3lfp4csqhjatzfowopaeypaa" \
+              --image-id "ocid1.image.oc1.eu-madrid-3.aaaaaaaaxv4mdw54ftuceegtwoqiy72gfjhqqxdv7njdibnnbke5thl2qfea" \
+              --ssh-authorized-keys-file "/oracle/.oci/llave.pub" \
+              --assign-public-ip true \
+              --display-name "Instancia-SDN-TFG" \
+              --boot-volume-size-in-gbs 70
+              
