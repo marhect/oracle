@@ -11,11 +11,11 @@ jobs:
           mkdir -p ~/.oci
           echo "${{ secrets.OCI_KEY_FILE }}" > ~/.oci/oci_api_key.pem
           
-          # CAMBIO AQUÍ: Damos permiso de lectura al Docker
+          # Ajuste de permisos para que el Docker pueda leer los archivos
           chmod 755 ~/.oci
           chmod 644 ~/.oci/oci_api_key.pem
           
-          # Configuración del archivo config
+          # Generación del archivo de configuración de OCI
           cat <<EOF > ~/.oci/config
           [DEFAULT]
           user=${{ secrets.OCI_USER }}
@@ -25,15 +25,17 @@ jobs:
           key_file=/oracle/.oci/oci_api_key.pem
           EOF
 
-          # Tu clave pública
+          # Tu clave pública para la instancia
           echo "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQCyvyhYdNnccYE3xdhBhl+kzZAa2CzWpCIbk7aNdU6sm6Sqz8wQIuz5PpjJIDpPNWlD8osETLXlk9CupphNlL9Abk6ijVaLBmUoMONehgySE9k8HWFvVEq7+0XT2bec08V5z/dm024evqVzlCLYbdAvYX79Q3/Xhg9qD18GN9QHRsjEAq+uiKnML2MU1v+Jyx4VyQ3ovbi/UrDVH3nHXE9++EEmoG1ZQVXTRr+Ubekq91zgpo4u6cEn3MVpd7IFexb1EZcYvVV6YRNT8cgL5bIBMTqgM31IX5aUQYMlgbokSOCkWhGZnrCpraxzY+BPYV2T8h0wmtTDYb35ZbGNzyxf ssh-key-2026-04-08" > ~/.oci/llave.pub
           
-          # También le damos permiso a la llave pública por si acaso
           chmod 644 ~/.oci/llave.pub
 
       - name: Disparo Rapido a Madrid-3 (via Docker)
+        continue-on-error: true
         run: |
+          # Ejecutamos el comando ignorando errores de capacidad y avisos de permisos
           docker run --rm \
+            -e OCI_CLI_SUPPRESS_FILE_PERMISSIONS_WARNING=True \
             -v ~/.oci:/oracle/.oci \
             ghcr.io/oracle/oci-cli \
             compute instance launch \
@@ -46,4 +48,4 @@ jobs:
               --ssh-authorized-keys-file "/oracle/.oci/llave.pub" \
               --assign-public-ip true \
               --display-name "Instancia-SDN-TFG" \
-              --boot-volume-size-in-gbs 70
+              --boot-volume-size-in-gbs 70 || echo "Aún sin capacidad en Madrid-3. Reintentando en la próxima ejecución..."
