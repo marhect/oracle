@@ -22,8 +22,8 @@ jobs:
           key_file=/oracle/.oci/oci_api_key.pem
           EOF
 
-          # Creamos la llave pública en la misma carpeta para enviarla al Docker
-          echo "PEGAR_AQUI_EL_TEXTO_DE_TU_CLAVE_PUBLICA" > ~/.oci/llave.pub
+          # Creamos la llave publica en la misma carpeta para enviarla al Docker
+          echo "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQCyvyhYdNnccYE3xdhBhl+kzZAa2CzWpCIbk7aNdU6sm6Sqz8wQIuz5PpjJIDpPNWlD8osETLXlk9CupphNlL9Abk6ijVaLBmUoMONehgySE9k8HWFvVEq7+0XT2bec08V5z/dm024evqVzlCLYbdAvYX79Q3/Xhg9qD18GN9QHRsjEAq+uiKnML2MU1v+Jyx4VyQ3ovbi/UrDVH3nHXE9++EEmoG1ZQVXTRr+Ubekq91zgpo4u6cEn3MVpd7IFexb1EZcYvVV6YRNT8cgL5bIBMTqgM31IX5aUQYMlgbokSOCkWhGZnrCpraxzY+BPYV2T8h0wmtTDYb35ZbGNzyxf ssh-key-2026-04-08" > ~/.oci/llave.pub
 
       - name: Disparo Rapido a Madrid-3 (via Docker)
         run: |
