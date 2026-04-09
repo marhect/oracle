@@ -10,9 +10,12 @@ jobs:
         run: |
           mkdir -p ~/.oci
           echo "${{ secrets.OCI_KEY_FILE }}" > ~/.oci/oci_api_key.pem
-          chmod 600 ~/.oci/oci_api_key.pem
           
-          # ¡OJO! La ruta key_file apunta a /oracle/.oci porque es la ruta DENTRO del contenedor
+          # CAMBIO AQUÍ: Damos permiso de lectura al Docker
+          chmod 755 ~/.oci
+          chmod 644 ~/.oci/oci_api_key.pem
+          
+          # Configuración del archivo config
           cat <<EOF > ~/.oci/config
           [DEFAULT]
           user=${{ secrets.OCI_USER }}
@@ -22,12 +25,14 @@ jobs:
           key_file=/oracle/.oci/oci_api_key.pem
           EOF
 
-          # Creamos la llave publica en la misma carpeta para enviarla al Docker
+          # Tu clave pública
           echo "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQCyvyhYdNnccYE3xdhBhl+kzZAa2CzWpCIbk7aNdU6sm6Sqz8wQIuz5PpjJIDpPNWlD8osETLXlk9CupphNlL9Abk6ijVaLBmUoMONehgySE9k8HWFvVEq7+0XT2bec08V5z/dm024evqVzlCLYbdAvYX79Q3/Xhg9qD18GN9QHRsjEAq+uiKnML2MU1v+Jyx4VyQ3ovbi/UrDVH3nHXE9++EEmoG1ZQVXTRr+Ubekq91zgpo4u6cEn3MVpd7IFexb1EZcYvVV6YRNT8cgL5bIBMTqgM31IX5aUQYMlgbokSOCkWhGZnrCpraxzY+BPYV2T8h0wmtTDYb35ZbGNzyxf ssh-key-2026-04-08" > ~/.oci/llave.pub
+          
+          # También le damos permiso a la llave pública por si acaso
+          chmod 644 ~/.oci/llave.pub
 
       - name: Disparo Rapido a Madrid-3 (via Docker)
         run: |
-          # Lanzamos la imagen oficial de Oracle montando nuestros archivos
           docker run --rm \
             -v ~/.oci:/oracle/.oci \
             ghcr.io/oracle/oci-cli \
@@ -42,4 +47,3 @@ jobs:
               --assign-public-ip true \
               --display-name "Instancia-SDN-TFG" \
               --boot-volume-size-in-gbs 70
-              
